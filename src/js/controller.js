@@ -1,8 +1,15 @@
 import * as model from "./model.js";
 import recipeView from "./views/recipeView.js";
+import searchView from "./views/searchView.js";
+import resultsView from "./views/resultsView.js";
 
 import "core-js/stable"; // This is to polyfill everything
 import "regenerator-runtime/runtime"; // This is for polyfilling the async and await
+
+if (module.hot) {
+  // This is simply coming from parcel but not from java script...
+  module.hot.accept();
+}
 
 // const recipeContainer = document.querySelector(".recipe");
 
@@ -31,17 +38,26 @@ const controlRecipes = async function () {
 
 const controlSearchResults = async function () {
   try {
-    await model.loadSearchResults("pizza");
+    resultsView.renderSpinner();
+
+    // 1) Get the search query
+    const query = searchView.getQuery();
+    if (!query) return;
+
+    // 2) Load the search results
+    await model.loadSearchResults(query);
+
+    // 3) Render the results
     console.log(model.state.search.results);
+    resultsView.render(model.state.search.results);
   } catch (err) {
     console.log(err);
   }
 };
 
-controlSearchResults();
-
 const init = function () {
   recipeView.addHandlerRender(controlRecipes);
+  searchView.addHandlerSearch(controlSearchResults);
 };
 
 init();
